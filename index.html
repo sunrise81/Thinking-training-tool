@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>每日思维训练</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="思维训练">
+<meta name="theme-color" content="#1a1a2e">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f5f0;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .app { display: flex; height: 100vh; }
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    display: flex; flex-direction: column;
+    padding: 24px 0;
+  }
+  .sidebar-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    color: #888; padding: 0 20px 20px;
+    border-bottom: 1px solid #2a2a4a;
+  }
+  .nav-item {
+    padding: 12px 20px; cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.15s;
+  }
+  .nav-item:hover { background: #2a2a4a; }
+  .nav-item.active { background: #4a4a8a; color: #fff; }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .streak-box {
+    margin-top: auto; padding: 16px 20px;
+    border-top: 1px solid #2a2a4a;
+    font-size: 12px; color: #888;
+  }
+  .streak-num { font-size: 28px; font-weight: 700; color: #f0c040; }
+
+  .main { flex: 1; overflow-y: auto; padding: 40px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: #fff; border-radius: 12px;
+    padding: 28px; margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .card-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: #888; text-transform: uppercase; margin-bottom: 16px;
+  }
+  .page-title {
+    font-size: 22px; font-weight: 700; margin-bottom: 8px;
+  }
+  .page-sub { font-size: 14px; color: #666; margin-bottom: 28px; }
+
+  /* ── Prompt box ── */
+  .prompt {
+    background: #f0f0ff; border-left: 4px solid #4a4a8a;
+    border-radius: 0 8px 8px 0; padding: 16px 18px;
+    font-size: 15px; line-height: 1.7; margin-bottom: 20px;
+  }
+  .prompt strong { color: #4a4a8a; }
+
+  /* ── Textarea ── */
+  textarea {
+    width: 100%; border: 1.5px solid #e0e0e0; border-radius: 8px;
+    padding: 14px; font-size: 14px; line-height: 1.8;
+    font-family: inherit; resize: vertical; min-height: 120px;
+    transition: border 0.2s;
+    background: #fafafa;
+  }
+  textarea:focus { outline: none; border-color: #4a4a8a; background: #fff; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-block; padding: 10px 22px;
+    border-radius: 8px; border: none; cursor: pointer;
+    font-size: 14px; font-weight: 600; transition: all 0.15s;
+  }
+  .btn-primary { background: #4a4a8a; color: #fff; }
+  .btn-primary:hover { background: #3a3a7a; }
+  .btn-ghost {
+    background: transparent; color: #4a4a8a;
+    border: 1.5px solid #4a4a8a;
+  }
+  .btn-ghost:hover { background: #f0f0ff; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  /* ── Feedback ── */
+  .feedback {
+    display: none; margin-top: 20px;
+    border-radius: 10px; padding: 18px 20px;
+    font-size: 14px; line-height: 1.8;
+  }
+  .feedback.show { display: block; }
+  .feedback.good { background: #f0fff4; border: 1px solid #6fcf97; }
+  .feedback.tip  { background: #fffbea; border: 1px solid #f0c040; }
+  .feedback-title { font-weight: 700; margin-bottom: 6px; }
+
+  /* ── Framework cards ── */
+  .fw-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .fw-card {
+    border-radius: 10px; padding: 18px;
+    border: 1.5px solid #e8e8f0;
+  }
+  .fw-card h3 { font-size: 15px; margin-bottom: 8px; }
+  .fw-card p { font-size: 13px; color: #555; line-height: 1.6; }
+  .fw-tag {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px; margin-bottom: 8px;
+  }
+  .tag-blue { background: #e8e8ff; color: #4a4a8a; }
+  .tag-green { background: #e8fff0; color: #2a7a4a; }
+  .tag-orange { background: #fff4e8; color: #a06020; }
+
+  /* ── History ── */
+  .hist-item {
+    border-bottom: 1px solid #f0f0f0; padding: 14px 0;
+    font-size: 13px;
+  }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-date { color: #888; font-size: 11px; margin-bottom: 4px; }
+  .hist-mode { font-weight: 600; margin-bottom: 4px; }
+  .hist-text { color: #444; line-height: 1.6; }
+
+  /* ── Progress ── */
+  .stat-row { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-box {
+    flex: 1; min-width: 100px;
+    background: #f5f5ff; border-radius: 10px;
+    padding: 16px; text-align: center;
+  }
+  .stat-num { font-size: 32px; font-weight: 700; color: #4a4a8a; }
+  .stat-label { font-size: 12px; color: #666; margin-top: 4px; }
+
+  /* ── Today badge ── */
+  .done-badge {
+    display: inline-block; background: #6fcf97; color: #fff;
+    font-size: 12px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; margin-left: 8px; vertical-align: middle;
+  }
+
+  /* ── Word trainer ── */
+  .word-card {
+    background: #1a1a2e; color: #e0e0e0; border-radius: 10px;
+    padding: 20px 24px; margin-bottom: 20px;
+  }
+  .word-main { font-size: 22px; font-weight: 700; color: #f0c040; margin-bottom: 6px; }
+  .word-example { font-size: 13px; color: #aaa; }
+
+  /* ── Reminder ── */
+  .reminder {
+    background: #fff8e8; border: 1px solid #f0c040;
+    border-radius: 10px; padding: 14px 18px;
+    font-size: 13px; color: #7a5a00; margin-bottom: 20px;
+  }
+
+  /* ── Steps ── */
+  .step { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
+  .step-num {
+    width: 26px; height: 26px; min-width: 26px;
+    background: #4a4a8a; color: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .step-body { font-size: 14px; line-height: 1.7; }
+  .step-body strong { color: #4a4a8a; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-title">思维训练</div>
+    <div class="nav-item active" onclick="showPage('today')" id="nav-today">
+      <span class="nav-icon">☀️</span> 今日练习
+    </div>
+    <div class="nav-item" onclick="showPage('vocab')" id="nav-vocab">
+      <span class="nav-icon">📝</span> 词汇激活
+    </div>
+    <div class="nav-item" onclick="showPage('express')" id="nav-express">
+      <span class="nav-icon">🎯</span> 表达框架
+    </div>
+    <div class="nav-item" onclick="showPage('history')" id="nav-history">
+      <span class="nav-icon">📚</span> 历史记录
+    </div>
+    <div class="nav-item" onclick="showPage('guide')" id="nav-guide">
+      <span class="nav-icon">💡</span> 使用指南
+    </div>
+    <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
+      <span class="nav-icon">⚙️</span> 设置
+    </div>
+    <div class="streak-box">
+      <div class="streak-num" id="streak-num">0</div>
+      <div>连续训练天数</div>
+      <div style="margin-top:8px; font-size:11px;" id="total-label">共完成 0 次练习</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- ① 今日练习 -->
+    <div class="page active" id="page-today">
+      <div class="page-title">今日练习 <span id="today-done-badge" style="display:none" class="done-badge">✓ 已完成</span></div>
+      <div class="page-sub" id="today-date"></div>
+
+      <!-- 三句话练习 -->
+      <div class="card">
+        <div class="card-title">核心训练 · 三句话结构</div>
+        <div class="reminder">
+          💡 <strong>每次开口前先问自己：我最想让对方记住的一句话是什么？</strong><br>
+          这是今天的核心任务，每天必做。
+        </div>
+        <div class="prompt">
+          <strong>今日题目：</strong><br>
+          <span id="today-prompt">正在加载题目…</span>
+        </div>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body"><strong>现象（是什么）：</strong>用一句话描述这件事/这个观点</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body"><strong>原因（为什么）：</strong>为什么会这样，给出核心理由</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>观点（怎么看）：</strong>你的主张或建议是什么</div>
+        </div>
+        <textarea id="today-answer" placeholder="在这里写下你的三句话（每句话独立一行）&#10;&#10;1. 现象：…&#10;2. 原因：…&#10;3. 观点：…"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="submitToday()">提交</button>
+          <button class="btn btn-ghost" onclick="changePrompt()">换一道题</button>
+          <button class="btn btn-ghost" onclick="toggleExample()" id="example-btn">💡 看示例</button>
+        </div>
+        <div id="example-box" style="display:none; margin-top:12px; background:#f8f8ff; border:1.5px dashed #c0c0e0; border-radius:8px; padding:14px 16px; font-size:13px; line-height:1.8; color:#444;">
+          <div style="font-size:11px; font-weight:700; color:#888; margin-bottom:8px; letter-spacing:1px">参考示例（仅供参考，写你自己的真实想法）</div>
+          <div id="example-content"></div>
+        </div>
+        <div class="feedback" id="today-feedback"></div>
+        <div id="today-ai-row" style="display:none; margin-top:12px;">
+          <button class="btn btn-primary" onclick="copyPrompt('today')" id="today-ai-btn">📋 复制反馈请求 → 去 Claude 粘贴</button>
+        </div>
+        <div class="feedback" id="today-ai-feedback"></div>
+        <div id="today-save-fb-row" style="display:none; margin-top:8px;">
+          <div style="font-size:12px; color:#888; margin-bottom:6px;">将 Claude 给你的反馈粘贴到下方，保存到历史记录：</div>
+          <textarea id="today-fb-input" placeholder="粘贴 Claude 的反馈内容…" style="min-height:80px; font-size:13px;"></textarea>
+          <div class="btn-row" style="margin-top:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="saveFeedback('today')">💾 保存反馈到历史</button>
+          </div>
+          <div id="today-save-status" style="font-size:12px; color:#2a7a4a; margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <!-- 快速回顾 -->
+      <div class="card">
+        <div class="card-title">今日回顾 · 可选加练</div>
+        <div class="prompt">
+          <strong>反思问题：</strong>今天有没有哪次表达让你满意或不满意？简单写下来。
+        </div>
+        <textarea id="reflect-answer" placeholder="写下你的反思（不用很长，2-3句话即可）…" style="min-height:80px"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-ghost btn-sm" onclick="saveReflect()">保存反思</button>
+        </div>
+        <div class="feedback" id="reflect-feedback"></div>
+      </div>
+    </div>
+
+    <!-- ② 词汇激活 -->
+    <div class="page" id="page-vocab">
+      <div class="page-title">词汇激活训练</div>
+      <div class="page-sub">读到好词就用它造一个关于自己的句子——让词进入"主动词汇库"</div>
+
+      <div class="card">
+        <div class="card-title">今日词汇</div>
+        <div class="word-card">
+          <div class="word-main" id="vocab-word">层次分明</div>
+          <div class="word-example" id="vocab-example">参考用法："他的演讲层次分明，让听众很容易抓住重点。"</div>
+        </div>
+        <div class="prompt">
+          <strong>你的任务：</strong><br>
+          用这个词，造一个关于<strong>你自己的工作/生活</strong>的句子。不用完美，只需要真实。
+        </div>
+        <div id="vocab-example-box" style="display:none; margin-bottom:12px; background:#f8f8ff; border:1.5px dashed #c0c0e0; border-radius:8px; padding:14px 16px; font-size:13px; line-height:1.9; color:#444;">
+          <div style="font-size:11px; font-weight:700; color:#888; margin-bottom:8px; letter-spacing:1px">造句示例（写你自己真实的工作/生活场景）</div>
+          <div id="vocab-example-content"></div>
+        </div>
+        <textarea id="vocab-answer" placeholder="例如：上周开会时，我的表达层次不够分明，导致同事没听清我的方案…" style="min-height:90px"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="submitVocab()">保存并换一个词</button>
+          <button class="btn btn-ghost" onclick="nextVocab()">跳过，换词</button>
+          <button class="btn btn-ghost" onclick="toggleVocabExample()" id="vocab-example-btn">💡 看示例</button>
+        </div>
+        <div class="feedback" id="vocab-feedback"></div>
+        <div id="vocab-ai-row" style="display:none; margin-top:12px;">
+          <button class="btn btn-primary" onclick="copyPrompt('vocab')" id="vocab-ai-btn">📋 复制反馈请求 → 去 Claude 粘贴</button>
+        </div>
+        <div class="feedback" id="vocab-ai-feedback"></div>
+        <div id="vocab-save-fb-row" style="display:none; margin-top:8px;">
+          <div style="font-size:12px; color:#888; margin-bottom:6px;">将 Claude 给你的反馈粘贴到下方，保存到历史记录：</div>
+          <textarea id="vocab-fb-input" placeholder="粘贴 Claude 的反馈内容…" style="min-height:80px; font-size:13px;"></textarea>
+          <div class="btn-row" style="margin-top:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="saveFeedback('vocab')">💾 保存反馈到历史</button>
+          </div>
+          <div id="vocab-save-status" style="font-size:12px; color:#2a7a4a; margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">自定义词汇 · 输入你读到的好词</div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="text" id="custom-word" placeholder="输入词语或短语…"
+            style="flex:1; padding:10px 14px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:inherit;">
+          <button class="btn btn-primary" onclick="useCustomWord()">用这个词练习</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 表达框架 -->
+    <div class="page" id="page-express">
+      <div class="page-title">表达框架速查</div>
+      <div class="page-sub">不用全记，用的时候来查。反复用才会内化。</div>
+
+      <div class="fw-grid">
+        <div class="fw-card">
+          <div class="fw-tag tag-blue">结论优先</div>
+          <h3>金字塔原理</h3>
+          <p>先说结论，再给理由，每个理由再有支撑事实。<br><br>
+          <strong>口诀：</strong>结论 → 理由1/2/3 → 每个理由的证据/案例</p>
+        </div>
+        <div class="fw-card">
+          <div class="fw-tag tag-blue">场景表达</div>
+          <h3>SCQA 框架</h3>
+          <p><strong>S</strong>ituation 背景 → <strong>C</strong>omplication 冲突 → <strong>Q</strong>uestion 疑问 → <strong>A</strong>nswer 答案<br><br>
+          适合：汇报、培训开场、说服他人</p>
+        </div>
+        <div class="fw-card">
+          <div class="fw-tag tag-green">分类原则</div>
+          <h3>MECE 原则</h3>
+          <p>分类时：<strong>不重叠、不遗漏</strong><br><br>
+          检查方法：把所有分类加在一起，能否覆盖全部情况？各类之间有没有重叠？</p>
+        </div>
+        <div class="fw-card">
+          <div class="fw-tag tag-green">检验深度</div>
+          <h3>费曼技巧</h3>
+          <p>假装你在给小学生讲解这个概念。<br><br>
+          说不清楚的地方 = 自己还没真正理解的地方。</p>
+        </div>
+        <div class="fw-card">
+          <div class="fw-tag tag-orange">每日基础</div>
+          <h3>三句话结构</h3>
+          <p>每次表达练习用：<br><br>
+          1️⃣ <strong>现象</strong>（是什么）<br>
+          2️⃣ <strong>原因</strong>（为什么）<br>
+          3️⃣ <strong>观点</strong>（怎么看）</p>
+        </div>
+        <div class="fw-card">
+          <div class="fw-tag tag-orange">开口前</div>
+          <h3>一句话核心</h3>
+          <p>每次开口之前，先在脑子里停 1 秒，问自己：<br><br>
+          <strong>"我最想让对方记住的一句话是什么？"</strong><br><br>
+          填不出来 → 还没想清楚，先别开口。</p>
+        </div>
+      </div>
+
+      <!-- 框架练习 -->
+      <div class="card" style="margin-top:4px">
+        <div class="card-title">框架实战练习</div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:13px; color:#666; margin-bottom:6px; display:block">选择要练习的框架：</label>
+          <select id="fw-select" style="padding:8px 12px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:inherit; background:#fff;">
+            <option value="pyramid">金字塔原理</option>
+            <option value="scqa">SCQA 框架</option>
+            <option value="three">三句话结构</option>
+          </select>
+        </div>
+        <div class="prompt" id="fw-prompt">选择框架后，这里会显示练习题。</div>
+        <textarea id="fw-answer" placeholder="按框架结构写下你的回答…"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="submitFw()">保存练习</button>
+          <button class="btn btn-ghost" onclick="loadFwPrompt()">生成题目</button>
+        </div>
+        <div class="feedback" id="fw-feedback"></div>
+      </div>
+    </div>
+
+    <!-- ④ 历史记录 -->
+    <div class="page" id="page-history">
+      <div class="page-title">历史记录</div>
+      <div class="page-sub">你的每一次练习都保存在这里。</div>
+
+      <div class="card">
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="stat-num" id="stat-total">0</div>
+            <div class="stat-label">总练习次数</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="stat-streak">0</div>
+            <div class="stat-label">连续天数</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="stat-vocab">0</div>
+            <div class="stat-label">激活词汇数</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="stat-days">0</div>
+            <div class="stat-label">累计训练天数</div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm" onclick="exportData()">导出记录</button>
+          <button class="btn btn-ghost btn-sm" style="color:#c00; border-color:#c00" onclick="clearData()">清空记录</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">练习记录</div>
+        <div id="history-list"><div style="color:#aaa; font-size:14px">还没有记录，快去完成今日练习吧！</div></div>
+      </div>
+    </div>
+
+    <!-- ⑤ 使用指南 -->
+    <div class="page" id="page-guide">
+      <div class="page-title">使用指南</div>
+      <div class="page-sub">怎么用这个工具效果最好？</div>
+
+      <div class="card">
+        <div class="card-title">每日最小计划（10-15分钟）</div>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body"><strong>今日练习（必做，5分钟）</strong><br>回答三句话结构的题目。不求完美，只求完成。</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body"><strong>词汇激活（可选，3分钟）</strong><br>用一个词造一个关于自己的句子。</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>今日反思（可选，2分钟）</strong><br>写下今天有没有哪次表达让你满意/不满意。</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">关键原则</div>
+        <div class="prompt" style="margin-bottom:12px">
+          <strong>不要追求完美，追求完成。</strong><br>
+          每天10分钟，坚持30天，比偶尔练一次2小时效果强10倍。
+        </div>
+        <div class="prompt" style="background:#f0fff4; border-color:#6fcf97">
+          <strong>开口之前的习惯：</strong><br>
+          停1秒 → 问自己"我的核心结论是什么？" → 再开口
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">如果你遇到了"想法放不进框架"的问题</div>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body"><strong>先倾倒，再归类</strong><br>把脑子里所有想法先写出来，不管顺序</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body"><strong>找相似性</strong><br>哪些想法是同一类的？给每一类起一个名字</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>检查 MECE</strong><br>各类之间有没有重叠？有没有漏掉的？</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body"><strong>套金字塔</strong><br>把每一类当作一个"理由"，放进金字塔结构</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑥ 设置 -->
+    <div class="page" id="page-settings">
+      <div class="page-title">设置</div>
+      <div class="page-sub">配置 Claude API Key 以获取 AI 个性化反馈</div>
+      <div class="card">
+        <div class="card-title">Claude API Key</div>
+        <p style="font-size:13px; color:#555; margin-bottom:14px; line-height:1.7">
+          填入你的 Anthropic API Key 后，每次提交练习时可以获得 AI 教练的个性化点评。<br>
+          Key 仅保存在本地浏览器中，不会上传到任何地方。
+        </p>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="password" id="api-key-input"
+            placeholder="sk-ant-api03-..."
+            style="flex:1; padding:10px 14px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:inherit;">
+          <button class="btn btn-primary" onclick="saveApiKey()">保存</button>
+        </div>
+        <div id="api-key-status" style="margin-top:10px; font-size:13px; color:#888;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">使用方式</div>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">双击 <strong>start.bat</strong> 启动本地服务器，浏览器会自动打开</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">在本页填入 API Key 并保存</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">完成练习提交后，点击「✨ 获取 AI 反馈」按钮</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+const PROMPTS = [
+  "描述一件你最近在工作或学习中遇到的挑战",
+  "你认为好的沟通最重要的是什么？",
+  "描述一次你改变了自己想法的经历",
+  "你觉得自己目前最需要提升的一个能力是什么？",
+  "最近有没有让你印象深刻的一个观点或发现？",
+  "描述一个你觉得做得很好的决定，以及为什么",
+  "你在工作/学习中最常用的一个方法是什么？",
+  "描述一次合作经历，你从中学到了什么？",
+  "你觉得什么叫做「真正理解」一件事？",
+  "最近有没有遇到让你感到困惑的事情？",
+  "你认为高效表达最大的障碍是什么？",
+  "描述一个你希望改变的习惯",
+  "你觉得什么情况下最能说清楚自己的想法？",
+  "描述一次你说服了别人的经历",
+  "你最近读到或听到的最有价值的一句话是什么？",
+];
+
+// 每道题对应的三句话示例（现象→原因→观点）
+const EXAMPLES = [
+  { p1: "最近我在准备一次内部培训，发现自己把大量时间花在整理内容上，但真正讲出来时却逻辑混乱。",
+    p2: "原因是我一直在「收集信息」，而没有先想清楚「我想让听众记住什么」，导致内容多但结构散。",
+    p3: "我认为准备培训应该倒着来——先定结论，再配素材，这样内容才能为观点服务，而不是堆砌。" },
+  { p1: "我发现很多人说了很多话，但对方还是不知道他想表达什么。",
+    p2: "这是因为大多数人说话是「流水账」——先有什么说什么，而不是先想好结论再开口。",
+    p3: "我认为好的沟通最重要的是「结论先行」，把最关键的那句话放在最前面，其他都是支撑。" },
+  { p1: "以前我认为多说话、多表现就是好的表达，所以开会总是抢先发言。",
+    p2: "后来我发现，每次我最先说完，别人反而没被说服，因为我把观点说了，但没给出理由。",
+    p3: "现在我相信，表达的质量比数量重要——一句有理由支撑的话，比十句没有根据的断言更有说服力。" },
+  { p1: "我目前最需要提升的是「把零散想法组织成清晰框架」的能力。",
+    p2: "我脑子里其实有很多想法，但一开口就说乱了，因为我没有在说之前先把结构想清楚。",
+    p3: "我打算从每天练习「三句话结构」开始，强迫自己在表达前先明确现象、原因、观点这三个层次。" },
+  { p1: "我最近看到一个观点：「你能不能把一个概念讲给外行听懂，才是检验你真正理解的标准。」",
+    p2: "这让我意识到，我以为自己懂很多东西，但一旦要用简单语言解释，就会发现有很多空白。",
+    p3: "我认为这个标准很有价值——以后学到新东西，我要试着用最简单的话把它写下来，来检验自己是否真正理解。" },
+  { p1: "上个月我决定把每天早上的第一件事从刷手机改为写一段文字，坚持了三周。",
+    p2: "我做这个决定是因为意识到，刷手机是被动接收信息，而写作是主动整理思维，两者对大脑的训练完全不同。",
+    p3: "我认为这是一个好决定，因为它用一个小习惯的改变，撬动了我一天思维状态的提升。" },
+  { p1: "我在工作中最常用的方法是「先写结论再展开」——无论是发邮件还是汇报，都先说最重要的那句话。",
+    p2: "这个方法有效，是因为它迫使我在行动前先想清楚「我最想传达什么」，避免说了很多废话。",
+    p3: "我建议每个人都试试这个方法，哪怕只是发一封邮件，先写第一句「我想说的是……」，其他内容会自然变得清晰。" },
+  { p1: "上次小组合作中，我们分工很明确，但最后汇总时发现各部分之间完全脱节，整体逻辑不通。",
+    p2: "原因是我们只分了「做什么」，但没有对齐「为什么这样做」，每个人都在自己的逻辑里工作。",
+    p3: "我学到的是：合作开始前，花时间统一「核心逻辑和结构框架」，比后期花时间整合要高效得多。" },
+  { p1: "我以前以为，能把书上的内容背出来就算理解了。",
+    p2: "但后来发现，当场景变了，我根本不知道怎么用——说明我只是记住了「表达方式」，而不是背后的「逻辑」。",
+    p3: "我现在认为，真正理解一件事，是能举出自己生活中的例子，并且能解释「为什么」——而不只是知道「是什么」。" },
+  { p1: "我最近感到困惑的是：明明知道要「结构化表达」，但开口时完全想不起来用。",
+    p2: "我分析原因是，我只是「知道」这个方法，但没有把它练到「自动调用」的程度——知道和会用之间还差很多练习。",
+    p3: "我觉得解决方法不是再去学更多理论，而是每天做小量的刻意练习，直到这个框架变成本能反应。" },
+  { p1: "我观察到很多人（包括我自己）说话说不清楚，根本原因不是词汇少，而是脑子里的想法本身就是模糊的。",
+    p2: "因为我们往往「有感觉但没想法」——知道自己想表达某个意思，但没有把它转化成具体的、可说出口的逻辑。",
+    p3: "所以提升表达，第一步不是学说话技巧，而是训练「把模糊感觉变成清晰语言」的能力，也就是思维清晰度。" },
+  { p1: "我有一个习惯想改变：每次开会或交流前，我从不提前想想「我要说什么」，都是当场即兴。",
+    p2: "这导致我每次说完都觉得没说到点上，因为即兴说话时大脑会默认走「熟悉路径」，而不是「最优路径」。",
+    p3: "我想养成的新习惯是：开口前停1秒，在脑子里过一遍「我的核心结论是什么」，哪怕只花5秒也好。" },
+  { p1: "我发现自己在安静地整理思路时（比如写作），比当场口头回答时表达要清晰得多。",
+    p2: "这是因为写作给了我时间把想法「外化」——看到文字之后，我才能发现逻辑漏洞并修改，但口头没有这个机会。",
+    p3: "这告诉我，提升口头表达的一个好方法，是先把想说的写下来，多练几次之后，这些结构就会内化进口头表达里。" },
+  { p1: "有一次，我说服了团队把汇报顺序从「过程→结论」改为「结论→过程」。",
+    p2: "我的方法是先承认大家的习惯做法有合理之处，然后用一个具体场景让他们感受到「听众视角」——听众最想先知道结果，而不是经过。",
+    p3: "我认为说服别人最有效的方式不是「我觉得应该这样」，而是「让对方自己意识到这样更好」——先共情，再引导。" },
+  { p1: "我最近读到一句话让我印象深刻：「清晰的写作是清晰思维的证明，而不是它的原因。」",
+    p2: "这句话击中了我——我一直以为写不清楚是因为文笔不好，但其实是因为想得不够清楚，写作只是把这个问题暴露了出来。",
+    p3: "我认为这句话的启示是：与其反复修改文字，不如先花时间把思路理清楚，文字自然会跟上。" },
+];
+
+const VOCAB_LIST = [
+  { word: "层次分明", example: "「他的演讲层次分明，每个部分都有清晰的起承转合。」",
+    samples: ["上次我的汇报层次不够分明，听众到最后都不知道我想表达什么结论。", "好的培训材料应该层次分明——先讲是什么，再讲为什么，最后讲怎么做。", "她整理的会议纪要层次分明，一眼就能看出哪些是决策、哪些是待办。"] },
+  { word: "一针见血", example: "「她的点评一针见血，直接指出了方案最致命的缺陷。」",
+    samples: ["上司一针见血地指出，我的方案缺少数据支撑，说服力不够。", "好的反馈应该一针见血，而不是绕了半天让对方猜你的意思。", "他一针见血地说：你说了很多，但我还是不知道你想要我做什么。"] },
+  { word: "有的放矢", example: "「培训内容要有的放矢，不能什么都讲，什么都讲不透。」",
+    samples: ["准备这次演讲，我要有的放矢——先搞清楚听众最想解决的问题是什么。", "沟通前如果不做准备，往往说了很多废话，而有的放矢才能让对方觉得值得听。", "培训要有的放矢，针对学员的真实痛点，而不是把所有知识点都塞进去。"] },
+  { word: "化繁为简", example: "「好的框架能把复杂问题化繁为简，让人一眼看清本质。」",
+    samples: ["我希望自己能把复杂的想法化繁为简，用一句话说清楚，而不是越解释越乱。", "好的演讲者能把行业难题化繁为简，让外行也能听懂核心逻辑。", "这个框架真的能化繁为简，三个维度就把所有情况覆盖了。"] },
+  { word: "言简意赅", example: "「汇报时要言简意赅，三句话能说清楚的不要说五句。」",
+    samples: ["我发邮件总是写得很长，其实对方需要的只是言简意赅的一段话。", "他的回答言简意赅，不废话，让人觉得他思路很清晰。", "我的目标是训练自己言简意赅地表达——把一页纸的内容压缩成三句话。"] },
+  { word: "逻辑自洽", example: "「你的方案逻辑自洽，但有没有考虑过实际落地的阻力？」",
+    samples: ["我的这套说法逻辑自洽，但我担心听众会觉得太理想化。", "一个好的论点不只要逻辑自洽，还要经得起反例的检验。", "他提出的方案看起来逻辑自洽，但忽略了执行层面的实际限制。"] },
+  { word: "触类旁通", example: "「学会一个框架后，要能触类旁通，举一反三。」",
+    samples: ["学会金字塔原理之后，我发现它能触类旁通，用在写邮件、做汇报、甚至平时聊天上。", "真正学到位的标志是触类旁通——能把一个场景里学到的方法迁移到完全不同的场景。", "她触类旁通地把销售中的说服技巧用到了内部提案上，效果出乎意料地好。"] },
+  { word: "深入浅出", example: "「能把专业概念讲得深入浅出，才说明真的理解透了。」",
+    samples: ["我希望自己能深入浅出地解释这个概念，而不是用一堆术语把听众绕晕。", "那位老师最厉害的地方，是能把复杂理论深入浅出地讲给完全没有背景的人听。", "深入浅出不是简化，而是找到听众已有的经验，用他们熟悉的语言来连接新知识。"] },
+  { word: "举一反三", example: "「真正学会一个方法，要能举一反三，用到不同场景。」",
+    samples: ["我现在练习三句话结构，目标是举一反三，让它在各种场合都能自然调用。", "他学东西总是举一反三，学了一个案例就能想到五个类似情境。", "培训结束后，我希望学员不只记住例子，而是能举一反三地解决自己遇到的新问题。"] },
+  { word: "条分缕析", example: "「她把整个事件条分缕析，听完之后大家都清楚了。」",
+    samples: ["他条分缕析地解释了项目延误的三个原因，让我对问题的全貌有了清晰认识。", "我希望自己面对复杂问题时，能条分缕析地拆解，而不是眉毛胡子一把抓。", "开会时如果能条分缕析地梳理问题，往往能节省一半的讨论时间。"] },
+  { word: "鞭辟入里", example: "「这个分析鞭辟入里，让我重新审视了这个问题。」",
+    samples: ["他的反馈鞭辟入里，直接说出了我一直隐约感觉到但没说出口的问题。", "好的分析不只是列现象，而是鞭辟入里地找到背后的根本原因。", "这篇文章鞭辟入里地解释了为什么大多数沟通失败，不是因为表达不够，而是因为倾听不够。"] },
+  { word: "提纲挈领", example: "「好的开场白要能提纲挈领，让听众知道接下来要讲什么。」",
+    samples: ["培训开始前，我会花两分钟提纲挈领地说明今天要解决什么问题、讲几个部分。", "一封好邮件的第一段应该提纲挈领，让读者不用往下读就知道这封邮件要表达什么。", "他主持会议总是先提纲挈领，三句话说清目标、议程和期望输出，大家效率高很多。"] },
+  { word: "心领神会", example: "「他只说了一半，我就心领神会，知道他在表达什么。」",
+    samples: ["和老搭档合作时，很多话不用说完对方就心领神会，节省了很多解释的成本。", "好的沟通不只靠说话，还要让对方心领神会——能感受到你没说出口的部分。", "我和他聊了五分钟，就心领神会了他真正担心的是什么，虽然他没有直说。"] },
+  { word: "恰如其分", example: "「用词要恰如其分，既不过度夸张，也不轻描淡写。」",
+    samples: ["我在表扬别人时常常用词过度，显得不真诚，其实恰如其分才更有说服力。", "批评要恰如其分，说到点上就够了，说过了反而让对方产生抵触。", "他的措辞恰如其分，既表达了严肃性，又没有让气氛变得剑拔弩张。"] },
+  { word: "融会贯通", example: "「学到融会贯通，才能在关键时刻自然调用出来。」",
+    samples: ["我现在还是「知道」这些框架，距离融会贯通还差很多，要靠反复练习才能内化。", "她把金字塔原理和SCQA框架融会贯通，形成了自己的一套表达风格。", "学习的终点不是记住知识，而是融会贯通——在需要的时候自然地用出来。"] },
+];
+
+const FW_PROMPTS = {
+  pyramid: [
+    "你认为提升表达能力最重要的是什么？（先给结论，再给3个理由，每个理由附一个例子）",
+    "为什么很多人开会时说不清楚自己的想法？（结论→理由→支撑）",
+    "你认为一个好的汇报应该具备哪些要素？（结论优先）",
+  ],
+  scqa: [
+    "用SCQA描述：你决定开始进行思维训练这件事（背景→冲突→疑问→答案）",
+    "用SCQA描述：你遇到过的一次沟通不顺畅的经历",
+    "用SCQA为一次培训设计开场白",
+  ],
+  three: [
+    "描述一件最近让你感触深的事（现象→原因→观点）",
+    "谈谈你对'持续学习'这件事的看法（现象→原因→观点）",
+    "描述你工作中一个常见但被忽视的问题（现象→原因→观点）",
+  ],
+};
+
+// ─────────────────────────────────────────────
+//  API KEY & AI FEEDBACK
+// ─────────────────────────────────────────────
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  save('claude_api_key', key);
+  const st = document.getElementById('api-key-status');
+  if (key) {
+    st.textContent = '✅ 已保存';
+    st.style.color = '#2a7a4a';
+  } else {
+    st.textContent = 'Key 已清除';
+    st.style.color = '#888';
+  }
+}
+
+function getApiKey() { return load('claude_api_key', ''); }
+
+// 上次提交的内容，供复制提示词使用
+let _lastSubmit = { mode: '', answer: '', prompt: '', word: '' };
+
+function buildClaudePrompt(mode, answer, promptText, word) {
+  if (mode === 'today') {
+    return `你是一个帮助我提升结构化思维和表达能力的教练，请给我以下练习的反馈。
+
+【练习类型】三句话结构（现象→原因→观点）
+
+【今日题目】${promptText}
+
+【我的回答】
+${answer}
+
+请从三点给我反馈：
+1. 结构检查：现象/原因/观点三个维度是否都有体现？
+2. 亮点：哪一句最有力？
+3. 改进建议：给出一个具体可操作的改进方向，并附一个简短的改写示例。
+
+回复请简洁，不超过200字。`;
+  }
+  if (mode === 'vocab') {
+    return `你是一个帮助我提升表达能力的教练，请给我以下造句练习的反馈。
+
+【练习类型】词汇激活造句
+【目标词汇】${word}
+【我的造句】${answer}
+
+请给我反馈：
+1. 用词是否自然贴切？
+2. 如何让这个句子更有表现力？
+3. 给一个改进版本的示例句子。
+
+回复请简洁，不超过150字。`;
+  }
+  return answer;
+}
+
+function saveFeedback(mode) {
+  const fb = document.getElementById(mode + '-fb-input').value.trim();
+  if (!fb) { alert('请先粘贴反馈内容！'); return; }
+  // 找到最近一条对应类型的历史记录，附加反馈
+  const h = getHistory();
+  const idx = h.findIndex(item => item.type === (mode === 'today' ? 'today' : 'vocab') && !item.aiFeedback);
+  if (idx !== -1) {
+    h[idx].aiFeedback = fb;
+    save('train_history', h);
+  } else {
+    // 找不到未保存反馈的记录，新建一条
+    addHistory({ type: mode === 'today' ? 'today' : 'vocab', answer: _lastSubmit.answer,
+      prompt: _lastSubmit.prompt, word: _lastSubmit.word, aiFeedback: fb });
+  }
+  const status = document.getElementById(mode + '-save-status');
+  status.textContent = '✅ 反馈已保存到历史记录';
+  document.getElementById(mode + '-fb-input').value = '';
+}
+
+function copyPrompt(mode) {
+  const fbEl = document.getElementById(mode + '-ai-feedback');
+  const btnEl = document.getElementById(mode + '-ai-btn');
+
+  const text = buildClaudePrompt(mode, _lastSubmit.answer, _lastSubmit.prompt, _lastSubmit.word);
+
+  navigator.clipboard.writeText(text).then(() => {
+    fbEl.className = 'feedback show good';
+    fbEl.innerHTML = `<div class="feedback-title">✅ 已复制到剪贴板！</div>
+      现在去 <strong><a href="https://claude.ai" target="_blank" style="color:#4a4a8a">claude.ai</a></strong> 新建对话，粘贴（Ctrl+V）获得反馈后，再回来把反馈粘贴到下方保存。`;
+    const orig = btnEl.textContent;
+    btnEl.textContent = '✓ 已复制';
+    setTimeout(() => { btnEl.textContent = orig; }, 2000);
+    // 显示粘贴反馈区域
+    const saveRow = document.getElementById(mode + '-save-fb-row');
+    if (saveRow) saveRow.style.display = 'block';
+  }).catch(() => {
+    // fallback: show the text for manual copy
+    fbEl.className = 'feedback show tip';
+    fbEl.innerHTML = `<div class="feedback-title">请手动复制下方内容</div>
+      <textarea style="width:100%;height:120px;font-size:12px;margin-top:8px;padding:8px;border:1px solid #ccc;border-radius:6px;font-family:inherit" onclick="this.select()">${text.replace(/</g,'&lt;')}</textarea>
+      <div style="margin-top:6px;font-size:12px;color:#666">全选后复制，粘贴到 claude.ai</div>`;
+  });
+}
+
+// ─────────────────────────────────────────────
+//  STORAGE
+// ─────────────────────────────────────────────
+function load(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+  catch(e) { return def; }
+}
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+
+function getHistory() { return load('train_history', []); }
+function addHistory(item) {
+  const h = getHistory();
+  h.unshift({ ...item, ts: Date.now(), date: todayStr() });
+  save('train_history', h.slice(0, 200));
+}
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+function getStreak() {
+  const h = getHistory();
+  if (!h.length) return 0;
+  const days = [...new Set(h.map(i => i.date))].sort().reverse();
+  let streak = 0, cur = new Date();
+  for (const d of days) {
+    const diff = Math.round((cur - new Date(d)) / 86400000);
+    if (diff <= 1) { streak++; cur = new Date(d); }
+    else break;
+  }
+  return streak;
+}
+
+function countVocab() {
+  return getHistory().filter(h => h.type === 'vocab').length;
+}
+
+function countDays() {
+  return new Set(getHistory().map(h => h.date)).size;
+}
+
+// ─────────────────────────────────────────────
+//  NAVIGATION
+// ─────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'history') renderHistory();
+  updateStats();
+}
+
+// ─────────────────────────────────────────────
+//  TODAY PAGE
+// ─────────────────────────────────────────────
+let currentPromptIdx = load('today_prompt_idx', 0);
+
+function loadTodayPrompt() {
+  currentPromptIdx = Math.floor(Math.random() * PROMPTS.length);
+  save('today_prompt_idx', currentPromptIdx);
+  document.getElementById('today-prompt').textContent = PROMPTS[currentPromptIdx];
+  document.getElementById('example-box').style.display = 'none';
+  document.getElementById('example-btn').textContent = '💡 看示例';
+}
+
+function changePrompt() { loadTodayPrompt(); }
+
+function toggleExample() {
+  const box = document.getElementById('example-box');
+  const btn = document.getElementById('example-btn');
+  if (box.style.display === 'none') {
+    const ex = EXAMPLES[currentPromptIdx];
+    document.getElementById('example-content').innerHTML =
+      `<div style="margin-bottom:6px"><span style="color:#4a4a8a;font-weight:700">现象：</span>${ex.p1}</div>` +
+      `<div style="margin-bottom:6px"><span style="color:#4a4a8a;font-weight:700">原因：</span>${ex.p2}</div>` +
+      `<div><span style="color:#4a4a8a;font-weight:700">观点：</span>${ex.p3}</div>`;
+    box.style.display = 'block';
+    btn.textContent = '💡 收起示例';
+  } else {
+    box.style.display = 'none';
+    btn.textContent = '💡 看示例';
+  }
+}
+
+function submitToday() {
+  const ans = document.getElementById('today-answer').value.trim();
+  if (!ans) { alert('请先写下你的三句话再提交哦！'); return; }
+
+  const lines = ans.split('\n').filter(l => l.trim()).length;
+  const fb = document.getElementById('today-feedback');
+
+  addHistory({ type: 'today', prompt: PROMPTS[currentPromptIdx], answer: ans });
+
+  let html = '';
+  if (lines >= 3) {
+    fb.className = 'feedback show good';
+    html = `<div class="feedback-title">✅ 很好，完成了！</div>
+    你写了 ${lines} 句，结构完整。下面几点可以自我检查：<br><br>
+    ✦ 你的"观点"那一句，有没有说出你真正的主张？<br>
+    ✦ "原因"那一句，能不能用一个具体的例子来支撑？<br>
+    ✦ 如果要在30秒内只说一句话，你会选哪句？`;
+  } else {
+    fb.className = 'feedback show tip';
+    html = `<div class="feedback-title">⚡ 提交成功，继续完善</div>
+    你目前写了 ${lines} 句。三句话结构要求每个维度各一句：<br><br>
+    1️⃣ 现象（是什么）<br>2️⃣ 原因（为什么）<br>3️⃣ 观点（怎么看）<br><br>
+    试着补全剩余部分，会更有训练效果哦。`;
+  }
+  fb.innerHTML = html;
+
+  // 记录内容供 AI 反馈使用，显示 AI 按钮
+  _lastSubmit = { mode: 'today', answer: ans, prompt: PROMPTS[currentPromptIdx], word: '' };
+  document.getElementById('today-ai-row').style.display = 'block';
+  document.getElementById('today-ai-feedback').className = 'feedback';
+
+  // mark done today
+  save('today_done', todayStr());
+  document.getElementById('today-done-badge').style.display = 'inline';
+  updateStats();
+}
+
+function saveReflect() {
+  const ans = document.getElementById('reflect-answer').value.trim();
+  if (!ans) { alert('写点内容再保存哦！'); return; }
+  addHistory({ type: 'reflect', answer: ans });
+  const fb = document.getElementById('reflect-feedback');
+  fb.className = 'feedback show good';
+  fb.innerHTML = '<div class="feedback-title">✅ 反思已保存</div>坚持反思是进步最快的方式，继续保持！';
+  updateStats();
+}
+
+// ─────────────────────────────────────────────
+//  VOCAB PAGE
+// ─────────────────────────────────────────────
+let vocabIdx = load('vocab_idx', 0);
+
+function loadVocab() {
+  const v = VOCAB_LIST[vocabIdx % VOCAB_LIST.length];
+  document.getElementById('vocab-word').textContent = v.word;
+  document.getElementById('vocab-example').textContent = '参考用法：' + v.example;
+  document.getElementById('vocab-answer').value = '';
+  document.getElementById('vocab-feedback').className = 'feedback';
+  document.getElementById('vocab-example-box').style.display = 'none';
+  document.getElementById('vocab-example-btn').textContent = '💡 看示例';
+}
+
+function toggleVocabExample() {
+  const box = document.getElementById('vocab-example-box');
+  const btn = document.getElementById('vocab-example-btn');
+  if (box.style.display === 'none') {
+    const v = VOCAB_LIST[vocabIdx % VOCAB_LIST.length];
+    document.getElementById('vocab-example-content').innerHTML =
+      v.samples.map((s, i) =>
+        `<div style="margin-bottom:${i < v.samples.length-1 ? '10px' : '0'}">
+          <span style="color:#4a4a8a; font-weight:700">例${i+1}：</span>${s}
+        </div>`
+      ).join('');
+    box.style.display = 'block';
+    btn.textContent = '💡 收起示例';
+  } else {
+    box.style.display = 'none';
+    btn.textContent = '💡 看示例';
+  }
+}
+
+function submitVocab() {
+  const ans = document.getElementById('vocab-answer').value.trim();
+  if (!ans) { alert('先写下你的造句再保存哦！'); return; }
+  const word = document.getElementById('vocab-word').textContent;
+  addHistory({ type: 'vocab', word, answer: ans });
+  const fb = document.getElementById('vocab-feedback');
+  fb.className = 'feedback show good';
+  fb.innerHTML = `<div class="feedback-title">✅ 已保存「${word}」</div>这个词已进入你的主动词汇库。下次表达时，试着自然用出来！`;
+
+  // 记录供 AI 反馈使用，显示 AI 按钮
+  _lastSubmit = { mode: 'vocab', answer: ans, prompt: '', word };
+  document.getElementById('vocab-ai-row').style.display = 'block';
+  document.getElementById('vocab-ai-feedback').className = 'feedback';
+
+  vocabIdx = (vocabIdx + 1) % VOCAB_LIST.length;
+  save('vocab_idx', vocabIdx);
+  updateStats();
+}
+
+function nextVocab() {
+  vocabIdx = (vocabIdx + 1) % VOCAB_LIST.length;
+  save('vocab_idx', vocabIdx);
+  loadVocab();
+}
+
+function useCustomWord() {
+  const w = document.getElementById('custom-word').value.trim();
+  if (!w) { alert('请输入词语！'); return; }
+  document.getElementById('vocab-word').textContent = w;
+  document.getElementById('vocab-example').textContent = '你自定义的词语，用它造一个关于自己的句子。';
+  document.getElementById('vocab-answer').value = '';
+  document.getElementById('vocab-feedback').className = 'feedback';
+  document.getElementById('custom-word').value = '';
+  showPage('vocab');
+}
+
+// ─────────────────────────────────────────────
+//  FRAMEWORK PAGE
+// ─────────────────────────────────────────────
+function loadFwPrompt() {
+  const fw = document.getElementById('fw-select').value;
+  const pool = FW_PROMPTS[fw];
+  const p = pool[Math.floor(Math.random() * pool.length)];
+  document.getElementById('fw-prompt').innerHTML = '<strong>练习题：</strong><br>' + p;
+  document.getElementById('fw-answer').value = '';
+  document.getElementById('fw-feedback').className = 'feedback';
+}
+
+function submitFw() {
+  const ans = document.getElementById('fw-answer').value.trim();
+  if (!ans) { alert('请先完成练习再保存！'); return; }
+  const fw = document.getElementById('fw-select').value;
+  addHistory({ type: 'framework', fw, answer: ans });
+  const fb = document.getElementById('fw-feedback');
+  fb.className = 'feedback show good';
+  fb.innerHTML = '<div class="feedback-title">✅ 框架练习已保存</div>很好！下次在真实场景中，试着有意识地用这个框架组织语言。';
+  updateStats();
+}
+
+// ─────────────────────────────────────────────
+//  HISTORY
+// ─────────────────────────────────────────────
+const TYPE_LABEL = {
+  today: '三句话练习', reflect: '今日反思',
+  vocab: '词汇激活', framework: '框架练习'
+};
+
+function renderHistory() {
+  const h = getHistory();
+  const el = document.getElementById('history-list');
+  if (!h.length) {
+    el.innerHTML = '<div style="color:#aaa; font-size:14px">还没有记录，快去完成今日练习吧！</div>';
+    return;
+  }
+  el.innerHTML = h.map(item => `
+    <div class="hist-item">
+      <div class="hist-date">${item.date}  ·  ${TYPE_LABEL[item.type] || item.type}
+        ${item.word ? '· 词汇：' + item.word : ''}
+      </div>
+      ${item.prompt ? `<div class="hist-mode">题：${item.prompt}</div>` : ''}
+      <div class="hist-text">${item.answer.replace(/\n/g, '<br>')}</div>
+      ${item.aiFeedback ? `<div style="margin-top:8px; padding:8px 10px; background:#f0fff4; border-left:3px solid #6fcf97; border-radius:0 6px 6px 0; font-size:12px; color:#444; line-height:1.6"><span style="font-weight:700; color:#2a7a4a">🤖 AI反馈：</span>${item.aiFeedback.replace(/\n/g, '<br>')}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function exportData() {
+  const h = getHistory();
+  const txt = h.map(item =>
+    `[${item.date}] ${TYPE_LABEL[item.type] || item.type}` +
+    (item.word ? `  词汇：${item.word}` : '') + '\n' +
+    (item.prompt ? `题目：${item.prompt}\n` : '') +
+    `内容：${item.answer}\n` +
+    (item.aiFeedback ? `AI反馈：${item.aiFeedback}\n` : '')
+  ).join('\n---\n');
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '思维训练记录_' + todayStr() + '.txt';
+  a.click();
+}
+
+function clearData() {
+  if (!confirm('确认清空所有记录？此操作不可恢复。')) return;
+  localStorage.clear();
+  renderHistory();
+  updateStats();
+}
+
+// ─────────────────────────────────────────────
+//  STATS
+// ─────────────────────────────────────────────
+function updateStats() {
+  const streak = getStreak();
+  const total = getHistory().length;
+  const vocab = countVocab();
+  const days = countDays();
+
+  document.getElementById('streak-num').textContent = streak;
+  document.getElementById('total-label').textContent = '共完成 ' + total + ' 次练习';
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-streak').textContent = streak;
+  document.getElementById('stat-vocab').textContent = vocab;
+  document.getElementById('stat-days').textContent = days;
+
+  const doneBadge = document.getElementById('today-done-badge');
+  if (load('today_done', '') === todayStr()) {
+    doneBadge.style.display = 'inline';
+  }
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+(function init() {
+  try {
+    document.getElementById('today-date').textContent =
+      new Date().toLocaleDateString('zh-CN', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+  } catch(e) {}
+  try { loadTodayPrompt(); } catch(e) {
+    document.getElementById('today-prompt').textContent = PROMPTS[0];
+  }
+  try { loadVocab(); } catch(e) {}
+  try { loadFwPrompt(); } catch(e) {}
+  try {
+    document.getElementById('fw-select').addEventListener('change', loadFwPrompt);
+  } catch(e) {}
+  try { updateStats(); } catch(e) {}
+  // 设置页：回显已保存的 key（遮掩显示）
+  try {
+    const k = getApiKey();
+    if (k) {
+      document.getElementById('api-key-input').placeholder = '已设置（重新输入可覆盖）';
+      document.getElementById('api-key-status').textContent = '✅ API Key 已配置';
+      document.getElementById('api-key-status').style.color = '#2a7a4a';
+    }
+  } catch(e) {}
+})();
+
+// PWA Service Worker 注册
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
