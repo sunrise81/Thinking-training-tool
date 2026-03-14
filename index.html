@@ -182,6 +182,31 @@
   }
   .step-body { font-size: 14px; line-height: 1.7; }
   .step-body strong { color: #4a4a8a; }
+
+  /* ── Bottom nav (mobile only) ── */
+  .bottom-nav { display: none; }
+  @media (max-width: 600px) {
+    .sidebar { display: none; }
+    .main {
+      padding: 20px 16px;
+      padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    }
+    .bottom-nav {
+      display: flex;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #1a1a2e;
+      padding-bottom: env(safe-area-inset-bottom);
+      border-top: 1px solid #2a2a4a;
+      z-index: 100;
+    }
+    .bottom-nav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; padding: 8px 4px;
+      cursor: pointer; color: #888; font-size: 10px; gap: 3px;
+    }
+    .bottom-nav-item .nav-icon { font-size: 20px; width: auto; }
+    .bottom-nav-item.active { color: #fff; }
+  }
 </style>
 </head>
 <body>
@@ -799,6 +824,9 @@ function showPage(name) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   document.getElementById('nav-' + name).classList.add('active');
+  document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
+  const bnav = document.getElementById('bnav-' + name);
+  if (bnav) bnav.classList.add('active');
   if (name === 'history') renderHistory();
   updateStats();
 }
@@ -1080,5 +1108,26 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 </script>
+
+<div class="bottom-nav">
+  <div class="bottom-nav-item active" onclick="showPage('today')" id="bnav-today">
+    <span class="nav-icon">☀️</span><span>今日</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showPage('vocab')" id="bnav-vocab">
+    <span class="nav-icon">📝</span><span>词汇</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showPage('express')" id="bnav-express">
+    <span class="nav-icon">🎯</span><span>框架</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showPage('history')" id="bnav-history">
+    <span class="nav-icon">📚</span><span>历史</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showPage('guide')" id="bnav-guide">
+    <span class="nav-icon">💡</span><span>指南</span>
+  </div>
+  <div class="bottom-nav-item" onclick="showPage('settings')" id="bnav-settings">
+    <span class="nav-icon">⚙️</span><span>设置</span>
+  </div>
+</div>
 </body>
 </html>
